@@ -14,10 +14,7 @@ import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -52,10 +49,10 @@ public class AccountsController {
     @PostMapping("/myCustomerDetails")
     //@CircuitBreaker(name = "detailsForCustomerSupportApp", fallbackMethod = "myCustomerDetailsFallBack")
     @Retry(name = "retryForCustomerDetails", fallbackMethod = "myCustomerDetailsFallBack")
-    public CustomerDetails myCustomerDetails(@RequestBody Customer customer) {
+    public CustomerDetails myCustomerDetails(@RequestHeader("trace-id") String traceId, @RequestBody Customer customer) {
         Accounts accounts = accountRepository.findByCustomerId(customer.getCustomerId());
-        List<Loans> loansDetails = loansFeignClient.getLoansDetails(customer);
-        List<Cards> cardsDetails = cardsFeignClient.getCardsDetails(customer);
+        List<Loans> loansDetails = loansFeignClient.getLoansDetails(traceId, customer);
+        List<Cards> cardsDetails = cardsFeignClient.getCardsDetails(traceId, customer);
 
         CustomerDetails customerDetails = new CustomerDetails();
         customerDetails.setAccounts(accounts);
@@ -64,9 +61,9 @@ public class AccountsController {
         return customerDetails;
     }
 
-    private CustomerDetails myCustomerDetailsFallBack(Customer customer, Throwable t) {
+    private CustomerDetails myCustomerDetailsFallBack(@RequestHeader("trace-id") String traceId, Customer customer, Throwable t) {
         Accounts accounts = accountRepository.findByCustomerId(customer.getCustomerId());
-        List<Loans> loans = loansFeignClient.getLoansDetails(customer);
+        List<Loans> loans = loansFeignClient.getLoansDetails(traceId, customer);
         CustomerDetails customerDetails = new CustomerDetails();
         customerDetails.setAccounts(accounts);
         customerDetails.setLoans(loans);

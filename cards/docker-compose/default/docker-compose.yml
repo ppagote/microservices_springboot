@@ -28,6 +28,31 @@ services:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
 
+  gatewayserver:
+    image: ppagote/gatewayserver:latest
+    mem_reservation: 700m
+    ports:
+      - "8072:8072"
+    depends_on:
+      - configserver
+      - eurekaserver
+      - accounts
+      - cards
+      - loans
+    deploy:
+      restart_policy:
+        condition: on-failure
+        #delay: 5s
+        max_attempts: 10
+        #window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      JVM_OPTS: '-Xmx12g -Xms12g -XX:MaxPermSize=1024m'
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+    networks:
+      - ppagote
+
   accounts:
     image: ppagote/accounts:latest
     mem_reservation: 700m
