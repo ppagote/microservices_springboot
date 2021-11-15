@@ -1,0 +1,98 @@
+version: "3.9"
+
+services:
+  configserver:
+    image: ppagote/configserver:latest
+    mem_reservation: 700m
+    ports:
+      - "8071:8071"
+    networks:
+      - ppagote
+
+  eurekaserver:
+    image: ppagote/eurekaserver:latest
+    mem_reservation: 700m
+    ports:
+      - "8070:8070"
+    depends_on:
+      - configserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        #delay: 5s
+        max_attempts: 10
+        #window: 120s
+    networks:
+      - ppagote
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+
+  accounts:
+    image: ppagote/accounts:latest
+    mem_reservation: 700m
+    ports:
+      - "8080:8080"
+    depends_on:
+      - configserver
+      - eurekaserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        #delay: 5s
+        max_attempts: 10
+        #window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      JVM_OPTS: '-Xmx12g -Xms12g -XX:MaxPermSize=1024m'
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+    networks:
+      - ppagote
+
+  loans:
+    image: ppagote/loans:latest
+    mem_reservation: 700m
+    ports:
+      - "8090:8090"
+    depends_on:
+      - configserver
+      - eurekaserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        #delay: 5s
+        max_attempts: 10
+        #window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      JVM_OPTS: '-Xmx12g -Xms12g -XX:MaxPermSize=1024m'
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+    networks:
+      - ppagote
+
+  cards:
+    image: ppagote/cards:latest
+    mem_reservation: 700m
+    ports:
+      - "9000:9000"
+    depends_on:
+      - configserver
+      - eurekaserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        #delay: 5s
+        max_attempts: 10
+        #window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      JVM_OPTS: '-Xmx12g -Xms12g -XX:MaxPermSize=1024m'
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+    networks:
+      - ppagote
+
+networks:
+  ppagote:

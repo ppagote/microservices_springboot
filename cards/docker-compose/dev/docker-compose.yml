@@ -1,0 +1,69 @@
+version: "3.8"
+
+services:
+  configserver:
+    image: ppagote/configserver:latest
+    mem_reservation: 700m
+    ports:
+      - "8071:8071"
+    networks:
+      - ppagote
+
+  accounts:
+    image: ppagote/accounts:latest
+    mem_reservation: 700m
+    ports:
+      - "8080:8080"
+    depends_on:
+      - configserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_CONFIG_IMPORT: configserver:http://localhost:8071/
+    networks:
+      - ppagote
+
+  loans:
+    image: ppagote/loans:latest
+    mem_reservation: 700m
+    ports:
+      - "8090:8090"
+    depends_on:
+      - configserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_CONFIG_IMPORT: configserver:http://localhost:8071/
+    networks:
+      - ppagote
+  cards:
+    image: ppagote/cards:latest
+    mem_reservation: 700m
+    ports:
+      - "9000:9000"
+    depends_on:
+      - configserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_CONFIG_IMPORT: configserver:http://localhost:8071/
+    networks:
+      - ppagote
+
+networks:
+  ppagote:

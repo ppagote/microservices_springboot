@@ -1,0 +1,22 @@
+package com.example.loans;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+@SpringBootApplication
+//@ComponentScan("com.example.loans.controller")
+@EnableJpaRepositories("com.example.loans.repository")
+@EntityScan("com.example.loans.model")
+@RefreshScope
+@EnableFeignClients
+public class LoansApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(LoansApplication.class, args);
+    }
+
+}
