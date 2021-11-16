@@ -1,11 +1,30 @@
 version: "3.9"
 
 services:
+  zipkin:
+    image: ppagote/ziplin:latest
+    mem_reservation: 700m
+    ports:
+      - "9411:9411"
+    networks:
+      ppagote:
+
   configserver:
     image: ppagote/configserver:latest
     mem_reservation: 700m
     ports:
       - "8071:8071"
+    depends_on:
+      - zipkin
+    deploy:
+      restart_policy:
+        condition: on-failure
+        #delay: 5s
+        max_attempts: 10
+        #window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
     networks:
       - ppagote
 
@@ -16,6 +35,7 @@ services:
       - "8070:8070"
     depends_on:
       - configserver
+      - zipkin
     deploy:
       restart_policy:
         condition: on-failure
@@ -27,6 +47,76 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: default
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+
+  accounts:
+    image: ppagote/accounts:latest
+    mem_reservation: 700m
+    ports:
+      - "8080:8080"
+    depends_on:
+      - configserver
+      - eurekaserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        #delay: 5s
+        max_attempts: 10
+        #window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      JVM_OPTS: '-Xmx12g -Xms12g -XX:MaxPermSize=1024m'
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+    networks:
+      - ppagote
+
+  loans:
+    image: ppagote/loans:latest
+    mem_reservation: 700m
+    ports:
+      - "8090:8090"
+    depends_on:
+      - configserver
+      - eurekaserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        #delay: 5s
+        max_attempts: 10
+        #window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      JVM_OPTS: '-Xmx12g -Xms12g -XX:MaxPermSize=1024m'
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+    networks:
+      - ppagote
+
+  cards:
+    image: ppagote/cards:latest
+    mem_reservation: 700m
+    ports:
+      - "9000:9000"
+    depends_on:
+      - configserver
+      - eurekaserver
+    deploy:
+      restart_policy:
+        condition: on-failure
+        #delay: 5s
+        max_attempts: 10
+        #window: 120s
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      JVM_OPTS: '-Xmx12g -Xms12g -XX:MaxPermSize=1024m'
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
+    networks:
+      - ppagote
 
   gatewayserver:
     image: ppagote/gatewayserver:latest
@@ -50,72 +140,7 @@ services:
       SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
       JVM_OPTS: '-Xmx12g -Xms12g -XX:MaxPermSize=1024m'
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
-    networks:
-      - ppagote
-
-  accounts:
-    image: ppagote/accounts:latest
-    mem_reservation: 700m
-    ports:
-      - "8080:8080"
-    depends_on:
-      - configserver
-      - eurekaserver
-    deploy:
-      restart_policy:
-        condition: on-failure
-        #delay: 5s
-        max_attempts: 10
-        #window: 120s
-    environment:
-      SPRING_PROFILES_ACTIVE: default
-      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
-      JVM_OPTS: '-Xmx12g -Xms12g -XX:MaxPermSize=1024m'
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
-    networks:
-      - ppagote
-
-  loans:
-    image: ppagote/loans:latest
-    mem_reservation: 700m
-    ports:
-      - "8090:8090"
-    depends_on:
-      - configserver
-      - eurekaserver
-    deploy:
-      restart_policy:
-        condition: on-failure
-        #delay: 5s
-        max_attempts: 10
-        #window: 120s
-    environment:
-      SPRING_PROFILES_ACTIVE: default
-      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
-      JVM_OPTS: '-Xmx12g -Xms12g -XX:MaxPermSize=1024m'
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
-    networks:
-      - ppagote
-
-  cards:
-    image: ppagote/cards:latest
-    mem_reservation: 700m
-    ports:
-      - "9000:9000"
-    depends_on:
-      - configserver
-      - eurekaserver
-    deploy:
-      restart_policy:
-        condition: on-failure
-        #delay: 5s
-        max_attempts: 10
-        #window: 120s
-    environment:
-      SPRING_PROFILES_ACTIVE: default
-      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
-      JVM_OPTS: '-Xmx12g -Xms12g -XX:MaxPermSize=1024m'
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+      SPRING_ZIPKIN_BASEURL: http://zipkin:9411/
     networks:
       - ppagote
 

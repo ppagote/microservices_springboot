@@ -29,6 +29,7 @@ public class CardsController {
 
     @PostMapping("/myCards")
     public List<Cards> getCardDetails(@RequestHeader("trace-id") String traceId, @RequestBody Customer customer) {
+        logger.info("getCardDetails method started");
         return cardsRepository.findByCustomerId(customer.getCustomerId());
     }
 

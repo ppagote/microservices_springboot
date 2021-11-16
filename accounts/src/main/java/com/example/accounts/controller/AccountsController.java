@@ -8,7 +8,6 @@ import com.example.accounts.service.client.LoansFeignClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
@@ -50,6 +49,7 @@ public class AccountsController {
     //@CircuitBreaker(name = "detailsForCustomerSupportApp", fallbackMethod = "myCustomerDetailsFallBack")
     @Retry(name = "retryForCustomerDetails", fallbackMethod = "myCustomerDetailsFallBack")
     public CustomerDetails myCustomerDetails(@RequestHeader("trace-id") String traceId, @RequestBody Customer customer) {
+        logger.info("myCustomerDetails method started");
         Accounts accounts = accountRepository.findByCustomerId(customer.getCustomerId());
         List<Loans> loansDetails = loansFeignClient.getLoansDetails(traceId, customer);
         List<Cards> cardsDetails = cardsFeignClient.getCardsDetails(traceId, customer);
@@ -58,6 +58,7 @@ public class AccountsController {
         customerDetails.setAccounts(accounts);
         customerDetails.setCards(cardsDetails);
         customerDetails.setLoans(loansDetails);
+        logger.info("myCustomerDetails method ended");
         return customerDetails;
     }
 

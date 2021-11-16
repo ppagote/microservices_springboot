@@ -28,7 +28,7 @@ public class LoansController {
 
     @PostMapping("/myLoans")
     public List<Loans> getLoansDetails(@RequestHeader("trace-id") String traceId, @RequestBody Customer customer) {
-        System.out.println("Invoking Loans microservice");
+        logger.info("Invoking Loans microservice");
         return loansRepository.findByCustomerIdOrderByStartDtDesc(customer.getCustomerId());
     }
 
